@@ -7,10 +7,12 @@
 #define STATE_SPACE 3
 #define STATE_GAP 4
 
-#define GAP_LENGTH 100
+#define GAP_LENGTH 150
 #define DOT_LENGTH 150
-#define DASH_LENGTH 350
-#define SPACE_LENGTH 350
+#define DASH_LENGTH 450
+#define SPACE_LENGTH 450
+
+#define MESSAGE_MAX 512
 
 char* morse_table[] = {
   ".-",   /* A */
@@ -47,11 +49,12 @@ struct state {
 };
 
 int seq_num = 0;
-char* sequence = NULL;
+char *sequence = NULL;
 struct state morse;
 
 int char_num = 0;
-char message[] = "this is a much longer message";
+int message_len = 0;
+char message[MESSAGE_MAX];
 
 void change_state(struct state *pstate, int new_state) {
   pstate->timer = millis();
@@ -116,7 +119,7 @@ void run_morse() {
       }
     }
     else {
-      if ( char_num < strlen(message) ) {
+      if ( char_num < message_len ) {
         int offset = -1;
         char message_char = message[char_num];
         if ( 'a' <= message_char && message_char <= 'z' ) {
@@ -141,10 +144,31 @@ void run_morse() {
 
 void setup() {
   pinMode(OUTPUT_PIN, OUTPUT);
+  Serial.begin(9600);
 }
 
 void loop() {
-  run_morse();
+  if ( char_num >= message_len ) {
+    /* message finished, so reset */
+    char_num = 0;
+    message_len = 0;
+  }
+  
+  if ( Serial.available() ) {
+    int in = Serial.read();
+    /* record bytes if there is space */
+    if ( message_len < MESSAGE_MAX ) {
+      message[message_len] = (char)in;
+      message_len++;
+      Serial.print(in, BYTE);
+    }
+    else {
+      Serial.print(-1, BYTE);
+    }
+  }
+  else {
+    run_morse();
+  }
 }
 
 
