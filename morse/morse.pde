@@ -12,14 +12,46 @@
 #define DASH_LENGTH 350
 #define SPACE_LENGTH 350
 
+char* morse_table[] = {
+  ".-",   /* A */
+  "-...", /* B */
+  "-.-.", /* C */
+  "-..",  /* D */
+  ".",    /* E */
+  "..-.", /* F */
+  "--.",  /* G */
+  "....", /* H */
+  "..",   /* I */
+  ".---", /* J */
+  "-.-",  /* K */
+  ".-..", /* L */
+  "--",   /* M */
+  "-.",   /* N */
+  "---",  /* O */
+  ".--.", /* P */
+  "--.-", /* Q */
+  ".-.",  /* R */
+  "...",  /* S */
+  "-",    /* T */
+  "..-",  /* U */
+  "...-", /* V */
+  ".--",  /* W */
+  "-..-", /* X */
+  "-.--", /* Y */
+  "--..", /* Z */
+};
+
 struct state {
   long timer;
   int state;
 };
 
 int seq_num = 0;
-char sequence[] = "... --- ...";
+char* sequence = NULL;
 struct state morse;
+
+int char_num = 0;
+char message[] = "this is a much longer message";
 
 void change_state(struct state *pstate, int new_state) {
   pstate->timer = millis();
@@ -69,7 +101,7 @@ void run_morse() {
   }
   
   if ( morse.state == STATE_IDLE ) {
-    if ( seq_num < strlen(sequence) ) {
+    if ( sequence && seq_num < strlen(sequence) ) {
       char next = sequence[seq_num];
       seq_num++;
       switch(next) {
@@ -81,6 +113,27 @@ void run_morse() {
           break;
         default:
           change_state(&morse, STATE_SPACE);
+      }
+    }
+    else {
+      if ( char_num < strlen(message) ) {
+        int offset = -1;
+        char message_char = message[char_num];
+        if ( 'a' <= message_char && message_char <= 'z' ) {
+          offset = (int)(message_char - 'a');
+        }
+        else if ( 'A' <= message_char && message_char <= 'Z' ) {
+          offset = (int)(message_char - 'A');
+        }
+        if ( offset > 0 ) {
+          sequence = morse_table[offset];
+          seq_num = 0;
+        }
+        char_num++;
+        change_state(&morse, STATE_SPACE);
+      }
+      else {
+        sequence = NULL;
       }
     }
   }
