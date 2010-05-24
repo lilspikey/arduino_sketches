@@ -1,5 +1,8 @@
 
-#define OUTPUT_PIN 13
+#define LED_PIN 13
+#define BUZZER_PIN 4
+
+#define BUZZER_FREQUENCY 700
 
 #define STATE_IDLE 0
 #define STATE_DOT 1
@@ -68,9 +71,22 @@ int char_num = 0;
 int message_len = 0;
 char message[MESSAGE_MAX];
 
+int buzzer_delay;
+
 void change_state(struct state *pstate, int new_state) {
   pstate->timer = millis();
   pstate->state = new_state;
+}
+
+void morse_pulse_on() {
+  digitalWrite(LED_PIN, HIGH);
+  unsigned long period = micros() % buzzer_delay;
+  digitalWrite(BUZZER_PIN, period < (buzzer_delay>>1)? HIGH : LOW);
+}
+
+void morse_pulse_off() {
+  digitalWrite(LED_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
 }
 
 void run_morse() {
@@ -80,7 +96,7 @@ void run_morse() {
   switch(morse.state) {
     case STATE_DOT:
       if ( state_duration < DOT_LENGTH ) {
-        digitalWrite(OUTPUT_PIN, HIGH);
+        morse_pulse_on();
       }
       else {
         next_state = STATE_GAP;
@@ -88,7 +104,7 @@ void run_morse() {
     break;
     case STATE_DASH:
       if ( state_duration < DASH_LENGTH ) {
-        digitalWrite(OUTPUT_PIN, HIGH);
+        morse_pulse_on();
       }
       else {
         next_state = STATE_GAP;
@@ -96,7 +112,7 @@ void run_morse() {
     break;
     case STATE_SPACE:
       if ( state_duration < SPACE_LENGTH ) {
-        digitalWrite(OUTPUT_PIN, LOW);
+        morse_pulse_off();
       }
       else {
         next_state = STATE_GAP;
@@ -104,7 +120,7 @@ void run_morse() {
     break;
     case STATE_GAP:
       if ( state_duration < GAP_LENGTH ) {
-        digitalWrite(OUTPUT_PIN, LOW);
+        morse_pulse_off();
       }
       else {
         next_state = STATE_IDLE;
@@ -158,7 +174,9 @@ void run_morse() {
 }
 
 void setup() {
-  pinMode(OUTPUT_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  buzzer_delay = 1000000/BUZZER_FREQUENCY;
   Serial.begin(9600);
 }
 
