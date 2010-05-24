@@ -41,6 +41,18 @@ char* morse_table[] = {
   "-..-", /* X */
   "-.--", /* Y */
   "--..", /* Z */
+
+  "-----", /* 0 */  
+  ".----", /* 1 */
+  "..---", /* 2 */
+  "...--", /* 3 */
+  "....-", /* 4 */
+  ".....", /* 5 */
+  "-....", /* 6 */
+  "--...", /* 7 */
+  "---..", /* 8 */
+  "----.", /* 9 */
+
 };
 
 struct state {
@@ -127,6 +139,9 @@ void run_morse() {
         }
         else if ( 'A' <= message_char && message_char <= 'Z' ) {
           offset = (int)(message_char - 'A');
+        }
+        else if ( '0' <= message_char && message_char <= '9' ) {
+          offset = (int)(message_char - '0') + 26;
         }
         if ( offset > 0 ) {
           sequence = morse_table[offset];
