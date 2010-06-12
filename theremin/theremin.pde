@@ -2,7 +2,8 @@
 
 Crude "theremin" of sorts.
 
-Push button on digital pin 12 toggles sound on and off.
+Push button on digital pin 12 turns sound on and off.  Hold down to turn on,
+release to turn off.
 
 Potentiometer on analog pin 4 controls tone (slides up and down scale).
 
@@ -66,11 +67,9 @@ void loop() {
   
   int push = digitalRead(PUSH_PIN);
   if ( push != push_prev ) {
-    if ( !push ) {
-      sound_on = !sound_on;
-      prev_tone = 0;
-      delay(100);
-    }
+    sound_on = !push;
+    prev_tone = 0;
+    delay(100);
   }
   push_prev = push;
 }
