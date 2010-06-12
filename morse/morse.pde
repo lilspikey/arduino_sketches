@@ -11,6 +11,8 @@ pin 13 (builtin LED).
 Wire a piezo buzzer to pin 4 (with a suitable resistor) to hear the
 morse tones for data sent over the serial port.
 
+http://www.psychicorigami.com/2010/05/26/my-first-arduino-project-morse-code/
+
 */
 
 #define LED_PIN 13
