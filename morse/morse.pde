@@ -71,8 +71,6 @@ int char_num = 0;
 int message_len = 0;
 char message[MESSAGE_MAX];
 
-int buzzer_delay;
-
 void change_state(struct state *pstate, int new_state) {
   pstate->timer = millis();
   pstate->state = new_state;
@@ -80,13 +78,12 @@ void change_state(struct state *pstate, int new_state) {
 
 void morse_pulse_on() {
   digitalWrite(LED_PIN, HIGH);
-  unsigned long period = micros() % buzzer_delay;
-  digitalWrite(BUZZER_PIN, period < (buzzer_delay>>1)? HIGH : LOW);
+  tone(BUZZER_PIN, BUZZER_FREQUENCY);
 }
 
 void morse_pulse_off() {
   digitalWrite(LED_PIN, LOW);
-  digitalWrite(BUZZER_PIN, LOW);
+  noTone(BUZZER_PIN);
 }
 
 void run_morse() {
@@ -176,7 +173,6 @@ void run_morse() {
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
-  buzzer_delay = 1000000/BUZZER_FREQUENCY;
   Serial.begin(9600);
 }
 
