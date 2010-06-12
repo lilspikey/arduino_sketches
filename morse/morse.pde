@@ -1,4 +1,18 @@
 
+/*
+
+Listens to the serial port for characters and outputs morse code.
+Buffers characters internally so more characters can be stored while
+the morse is being output.
+
+Generates a morse tone on pin 4 (700hz) and also emits morse pulse on 
+pin 13 (builtin LED).
+
+Wire a piezo buzzer to pin 4 (with a suitable resistor) to hear the
+morse tones for data sent over the serial port.
+
+*/
+
 #define LED_PIN 13
 #define BUZZER_PIN 4
 
