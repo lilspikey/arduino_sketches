@@ -53,12 +53,20 @@ void loop() {
     int pot = analogRead(POT_PIN);
     int note = ((SCALE_LEN*pot) >> 10);
     int current_tone = scale[note];
+    
+    if ( prev_tone != 0 ) {
+      // bit of legato (smooth the note transition)
+      current_tone = (current_tone + prev_tone) >> 1;
+    }
+    
     if ( current_tone != prev_tone ) {
-      noTone(BUZZER_PIN);
       tone(BUZZER_PIN, current_tone);
       prev_tone = current_tone;
     }
     digitalWrite(LED_PIN, HIGH);
+    
+    // slight delay so we can hear the transition
+    delay(20);
   }
   else {
     noTone(BUZZER_PIN);
@@ -69,6 +77,8 @@ void loop() {
   if ( push != push_prev ) {
     sound_on = !push;
     prev_tone = 0;
+    
+    // delay to debounce
     delay(100);
   }
   push_prev = push;
