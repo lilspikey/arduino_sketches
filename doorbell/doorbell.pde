@@ -1,6 +1,6 @@
 #include <Servo.h>
 
-#define DOORBELL_PIN 0
+#define DOORBELL_PIN 5
 #define STATE_WAITING 0
 #define STATE_RUNG 1
 #define DOORBELL_THRESHOLD 50
