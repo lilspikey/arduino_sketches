@@ -1,4 +1,3 @@
-
 /*
 
 Listens to the serial port for characters and outputs morse code.
@@ -172,7 +171,7 @@ void run_morse() {
         else if ( '0' <= message_char && message_char <= '9' ) {
           offset = (int)(message_char - '0') + 26;
         }
-        if ( offset > 0 ) {
+        if ( offset >= 0 ) {
           sequence = morse_table[offset];
           seq_num = 0;
         }
