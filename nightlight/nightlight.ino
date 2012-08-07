@@ -10,12 +10,21 @@
  * 
  *
  **/
- 
+
+#include "nightlight.h"
+
 #define RED_PIN 3
 #define GREEN_PIN 5
 #define BLUE_PIN 6
 
 #define MODE_PIN 10
+
+#define RGB_BUFFER_SIZE 10
+
+
+// circular buffer of RGB colors
+RGB rgb_buffer[RGB_BUFFER_SIZE];
+int rgb_current;
 
 void setup() {
   Serial.begin(9600);
@@ -25,20 +34,41 @@ void setup() {
 
   // switch using pullup resistor
   pinMode(MODE_PIN, INPUT);
-  digitalWrite(MODE_PIN, HIGH);  
+  digitalWrite(MODE_PIN, HIGH);
+  
+  RGB zero = { 0, 0, 0 };
+  for ( int i = 0; i < RGB_BUFFER_SIZE; i++ ) {
+      rgb_buffer[i] = zero;
+  }
+  rgb_current = 0;
+}
+
+void update_LED() {
+  int red = 0, green = 0, blue = 0;
+  for ( int i = 0; i < RGB_BUFFER_SIZE; i++ ) {
+      RGB* rgb = &(rgb_buffer[i]);
+      red += rgb->red;
+      green += rgb->green;
+      blue += rgb->blue;
+  }
+  red /= RGB_BUFFER_SIZE;
+  green /= RGB_BUFFER_SIZE;
+  blue /= RGB_BUFFER_SIZE;
+  
+  analogWrite(RED_PIN, 255-red);
+  analogWrite(GREEN_PIN, 255-green);
+  analogWrite(BLUE_PIN, 255-blue);
 }
 
 void rgb(int r, int g, int b) {
-  analogWrite(RED_PIN, 255-r);
-  analogWrite(GREEN_PIN, 255-g);
-  analogWrite(BLUE_PIN, 255-b);
+  RGB rgb = { r, g, b };
+  rgb_buffer[rgb_current] = rgb;
+  rgb_current = (rgb_current+1) % RGB_BUFFER_SIZE;
 }
 
 void loop() {
   if ( digitalRead(MODE_PIN) == HIGH ) {
-    digitalWrite(RED_PIN, LOW);
-    digitalWrite(GREEN_PIN, LOW);
-    digitalWrite(BLUE_PIN, LOW);
+    rgb(255, 255, 255);
   }
   else {
     int r = analogRead(0);
@@ -47,27 +77,15 @@ void loop() {
     Serial.print("temperature (C) = ");
     Serial.println(t);
     
-    if ( t >= 27 ) {
-      rgb(255, 0, 0);
-    }
-    else if ( t >= 24 ) {
-      rgb(255, 255, 0);
-    }
-    else if ( t >= 21 ) {
-      rgb(0, 255, 0);
-    }
-    else if ( t >= 18 ) {
-      rgb(0, 255, 255);
-    }
-    else if ( t >= 15 ) {
-      rgb(0, 0, 255);
-    }
-    else if ( t >= 13 ) {
-      rgb(255, 0, 255);
-    }
-    else {
-      rgb(255, 255, 255);
-    }
+    RGB high, low;
+    high = color_for_temperature(t+3);
+    low = color_for_temperature(t);
+    double dx = fmod(t, 3)/3.0;
+    dx = dx < 0? 0 : dx;
+    
+    RGB col = interpolate(high, low, dx);
+    rgb(col.red, col.blue, col.green);
   }
-  delay(1000);
+  update_LED();
+  delay(250);
 }
