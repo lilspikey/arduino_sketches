@@ -19,12 +19,14 @@
 
 #define MODE_PIN 10
 
-#define RGB_BUFFER_SIZE 10
+#define RGB_BUFFER_SIZE 25
 
 
 // circular buffer of RGB colors
 RGB rgb_buffer[RGB_BUFFER_SIZE];
 int rgb_current;
+double t;
+int temp_count = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -66,26 +68,27 @@ void rgb(int r, int g, int b) {
   rgb_current = (rgb_current+1) % RGB_BUFFER_SIZE;
 }
 
+void update_temp() {
+  if ( temp_count <= 0 ) {
+    int r = analogRead(0);
+    double v = 5.0*r/1024;
+    t = (v-0.5) * 100;
+    Serial.print("temperature (C) = ");
+    Serial.println(t);
+    temp_count = 3;
+  }
+  temp_count--;
+}
+
 void loop() {
+  update_temp();
   if ( digitalRead(MODE_PIN) == HIGH ) {
     rgb(255, 255, 255);
   }
   else {
-    int r = analogRead(0);
-    double v = 5.0*r/1024;
-    double t = (v-0.5) * 100;
-    Serial.print("temperature (C) = ");
-    Serial.println(t);
-    
-    RGB high, low;
-    high = color_for_temperature(t+3);
-    low = color_for_temperature(t);
-    double dx = fmod(t, 3)/3.0;
-    dx = dx < 0? 0 : dx;
-    
-    RGB col = interpolate(high, low, dx);
-    rgb(col.red, col.blue, col.green);
+    RGB col = color_for_temperature(t);
+    rgb(col.red, col.green, col.blue);
   }
   update_LED();
-  delay(250);
+  delay(60);
 }
