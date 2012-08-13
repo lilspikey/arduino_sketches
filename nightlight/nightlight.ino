@@ -19,14 +19,24 @@
 
 #define MODE_PIN 10
 
-#define RGB_BUFFER_SIZE 25
+#define TEMP_ANALOG_PIN 0
 
+#define RGB_BUFFER_SIZE 25
+#define TEMPERATURE_BUFFER_SIZE 50
 
 // circular buffer of RGB colors
 RGB rgb_buffer[RGB_BUFFER_SIZE];
 int rgb_current;
-double t;
-int temp_count = 0;
+double temperature_buffer[TEMPERATURE_BUFFER_SIZE];
+int temperature_current;
+double last_temperature;
+
+double read_temp() {
+  int r = analogRead(TEMP_ANALOG_PIN);
+  double v = 5.0*r/1024;
+  double t = (v-0.5) * 100;
+  return t; 
+}
 
 void setup() {
   Serial.begin(9600);
@@ -43,6 +53,13 @@ void setup() {
       rgb_buffer[i] = zero;
   }
   rgb_current = 0;
+  
+  double t = read_temp();
+  for ( int i = 0; i < TEMPERATURE_BUFFER_SIZE; i++ ) {
+      temperature_buffer[i] = t;
+  }
+  temperature_current = 0;
+  last_temperature = 0;
 }
 
 void update_LED() {
@@ -69,15 +86,29 @@ void rgb(int r, int g, int b) {
 }
 
 void update_temp() {
-  if ( temp_count <= 0 ) {
-    int r = analogRead(0);
-    double v = 5.0*r/1024;
-    t = (v-0.5) * 100;
-    Serial.print("temperature (C) = ");
-    Serial.println(t);
-    temp_count = 3;
+  double t = read_temp();
+  // ignore out of range values
+  if ( t > 0 && t < 40 ) {
+    temperature_buffer[temperature_current] = t;
+    temperature_current = (temperature_current+1) % TEMPERATURE_BUFFER_SIZE;
   }
-  temp_count--;
+}
+
+double calc_temperature() {
+  double t = 0;
+  for ( int i = 0; i < TEMPERATURE_BUFFER_SIZE; i++ ) {
+      t += temperature_buffer[i];
+  }
+  return t/TEMPERATURE_BUFFER_SIZE;
+}
+
+void print_temperature(double t) {
+  // only print if temperature changes by decent amount
+  if ( fabs(last_temperature-t) > 0.1 ) {
+    Serial.print(t);
+    Serial.println("C");
+    last_temperature = t;
+  }
 }
 
 void loop() {
@@ -86,9 +117,11 @@ void loop() {
     rgb(255, 255, 255);
   }
   else {
+    double t = calc_temperature();
     RGB col = color_for_temperature(t);
     rgb(col.red, col.green, col.blue);
+    print_temperature(t);
   }
   update_LED();
-  delay(60);
+  delay(100);
 }
