@@ -12,6 +12,7 @@
  **/
 
 #include "nightlight.h"
+#include "circular_buffer.h"
 
 #define RED_PIN 3
 #define GREEN_PIN 5
@@ -21,19 +22,19 @@
 
 #define TEMP_ANALOG_PIN 0
 
-#define RGB_BUFFER_SIZE 25
-#define TEMPERATURE_BUFFER_SIZE 50
+#define VOLTAGE_SCALE 4.96 // not quite 5
+
+//#define RUN_TEST
 
 // circular buffer of RGB colors
-RGB rgb_buffer[RGB_BUFFER_SIZE];
-int rgb_current;
-double temperature_buffer[TEMPERATURE_BUFFER_SIZE];
-int temperature_current;
+CircularBuffer<RGB, 50> rgb_buffer;
+CircularBuffer<double, 31> temperature_buffer;
 double last_temperature;
+int read_count;
 
 double read_temp() {
   int r = analogRead(TEMP_ANALOG_PIN);
-  double v = 5.0*r/1024;
+  double v = VOLTAGE_SCALE*r/1024;
   double t = (v-0.5) * 100;
   return t; 
 }
@@ -48,58 +49,58 @@ void setup() {
   pinMode(MODE_PIN, INPUT);
   digitalWrite(MODE_PIN, HIGH);
   
-  RGB zero = { 0, 0, 0 };
-  for ( int i = 0; i < RGB_BUFFER_SIZE; i++ ) {
-      rgb_buffer[i] = zero;
-  }
-  rgb_current = 0;
+  RGB zero(0, 0, 0);
+  rgb_buffer.init(zero);
   
   double t = read_temp();
-  for ( int i = 0; i < TEMPERATURE_BUFFER_SIZE; i++ ) {
-      temperature_buffer[i] = t;
-  }
-  temperature_current = 0;
+  temperature_buffer.init(t);
   last_temperature = 0;
+  read_count = 0;
+  
+#ifdef RUN_TEST
+  delay(1000);
+  Serial.println("BEGIN TEST");
+  
+  for ( int i = 9; i < 29; i++ ) {
+    Serial.print("T = ");
+    Serial.println(i);
+    RGB col = color_for_temperature(i);
+    print_rgb(col);
+    Serial.println();
+    delay(500);
+  }
+  
+  Serial.println("END TEST");
+  delay(1000);
+#endif
 }
 
 void update_LED() {
-  int red = 0, green = 0, blue = 0;
-  for ( int i = 0; i < RGB_BUFFER_SIZE; i++ ) {
-      RGB* rgb = &(rgb_buffer[i]);
-      red += rgb->red;
-      green += rgb->green;
-      blue += rgb->blue;
-  }
-  red /= RGB_BUFFER_SIZE;
-  green /= RGB_BUFFER_SIZE;
-  blue /= RGB_BUFFER_SIZE;
+  RGB avg = rgb_buffer.avg();
   
-  analogWrite(RED_PIN, 255-red);
-  analogWrite(GREEN_PIN, 255-green);
-  analogWrite(BLUE_PIN, 255-blue);
+  analogWrite(RED_PIN, 255-avg.red);
+  analogWrite(GREEN_PIN, 255-avg.green);
+  analogWrite(BLUE_PIN, 255-avg.blue);
 }
 
 void rgb(int r, int g, int b) {
-  RGB rgb = { r, g, b };
-  rgb_buffer[rgb_current] = rgb;
-  rgb_current = (rgb_current+1) % RGB_BUFFER_SIZE;
+  RGB rgb(r, g, b);
+  rgb_buffer.add(rgb);
 }
 
 void update_temp() {
-  double t = read_temp();
-  // ignore out of range values
-  if ( t > 0 && t < 40 ) {
-    temperature_buffer[temperature_current] = t;
-    temperature_current = (temperature_current+1) % TEMPERATURE_BUFFER_SIZE;
+  if ( read_count == 0 ) {
+    double t = read_temp();
+    // ignore out of range values
+    if ( t > 0 && t < 40 ) {
+      temperature_buffer.add(t);
+    }
   }
+  read_count = (read_count + 1) % 10;
 }
 
 double calc_temperature() {
-  double t = 0;
-  for ( int i = 0; i < TEMPERATURE_BUFFER_SIZE; i++ ) {
-      t += temperature_buffer[i];
-  }
-  return t/TEMPERATURE_BUFFER_SIZE;
+  return temperature_buffer.median();
 }
 
 void print_temperature(double t) {
@@ -118,9 +119,9 @@ void loop() {
   }
   else {
     double t = calc_temperature();
+    print_temperature(t);
     RGB col = color_for_temperature(t);
     rgb(col.red, col.green, col.blue);
-    print_temperature(t);
   }
   update_LED();
   delay(100);
