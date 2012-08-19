@@ -28,7 +28,7 @@
 
 // circular buffer of RGB colors
 CircularBuffer<RGB, 50> rgb_buffer;
-CircularBuffer<double, 31> temperature_buffer;
+CircularBuffer<double, 45> temperature_buffer;
 double last_temperature;
 int read_count;
 
