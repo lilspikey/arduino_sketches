@@ -204,15 +204,18 @@ void loop() {
     if ( message_len < MESSAGE_MAX ) {
       message[message_len] = (char)in;
       message_len++;
-      Serial.print(in, BYTE);
+      Serial.write(in);
+     /* prior to Arduino 1.0 was Serial.print(in, BYTE); */
     }
     else {
-      Serial.print(-1, BYTE);
+      Serial.write(-1);      
+      /* prior to Arduino 1.0 was Serial.print(-1, BYTE); */
     }
   }
   else {
     run_morse();
   }
 }
+
 
 
