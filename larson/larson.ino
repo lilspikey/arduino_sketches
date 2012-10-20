@@ -1,5 +1,7 @@
 
 #define PIN_COUNT 6
+#define UPDATE_DURATION 20
+
 int pins[PIN_COUNT] = { 3, 5, 6, 9, 10, 11 };
 int states[PIN_COUNT];
 int current_pin = 0;
@@ -17,22 +19,22 @@ void updatePins() {
   for ( int i = 0; i < PIN_COUNT; i++ ) {
     analogWrite(pins[i], states[i]);
   }
-  delay(35);
+  delay(6);
 }
 
 void decay() {
   for ( int i = 0; i < PIN_COUNT; i++ ) {
-    states[i] /= 2;
+    states[i] = (19*states[i]/20);
   }
 }
 
 void loop() {
   decay();
-  states[current_pin] = 255;
+  states[current_pin] = 255 * update_count / UPDATE_DURATION;
   updatePins();
   
   update_count++;
-  if ( update_count > 2 ) {
+  if ( update_count > UPDATE_DURATION ) {
     update_count = 0;
     current_pin += dir;
     if ( current_pin == 0 ) {
