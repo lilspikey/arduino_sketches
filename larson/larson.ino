@@ -1,6 +1,6 @@
 
 #define PIN_COUNT 6
-#define UPDATE_DURATION 20
+#define UPDATE_DURATION 30
 
 int pins[PIN_COUNT] = { 3, 5, 6, 9, 10, 11 };
 int states[PIN_COUNT];
