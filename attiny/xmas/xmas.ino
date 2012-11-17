@@ -76,17 +76,23 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   pinMode(SPEAKER_PIN, OUTPUT);
 
-  // disable unused subsystems  
-  power_adc_disable();
-  power_timer1_disable();
-#ifndef __AVR_ATtiny85__
-  power_spi_disable();  // not defined for ATTiny
-  power_twi_disable();  // not defined for ATTiny
-#else
-  // These are ONLY defined for ATTiny
-  wdt_disable();
-  power_usi_disable();
-#endif
+  ADCSRA &= ~(1<<ADEN); //turn off ADC
+  ACSR |= _BV(ACD);     //disable the analog comparator
+}
+
+void gotoSleep() {
+  GIMSK |= 1<<PCIE;  //Enable Pin Change Interrupt
+  PCMSK |= 1<<PCINT0; //Watch for Pin Change on Pin5 (PB0)
+  
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  sleep_enable();
+  sleep_mode();
+      
+  // waking up from sleep mode.
+  sleep_disable();
+
+  GIMSK &= ~(1<<PCIE); //Disable the interrupt so it doesn't keep flagging
+  PCMSK &= ~(1<<PCINT0);
 }
 
 void playSong() {
@@ -105,18 +111,7 @@ void playSong() {
 void loop() {
   playSong();
   
-  GIMSK |= 1<<PCIE;  //Enable Pin Change Interrupt
-  PCMSK |= 1<<PCINT0; //Watch for Pin Change on Pin5 (PB0)
-
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-  sleep_enable();
-  sleep_mode();
-      
-  // waking up from sleep mode.
-  sleep_disable();
-
-  GIMSK &= ~(1<<PCIE); //Disable the interrupt so it doesn't keep flagging
-  PCMSK &= ~(1<<PCINT0);
+  gotoSleep();
       
   // Wait for the button to be released
   while (digitalRead(SWITCH_PIN) == LOW) {  }
