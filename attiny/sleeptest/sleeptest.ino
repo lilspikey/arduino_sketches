@@ -7,8 +7,13 @@
 #include <avr/power.h>
 #include <avr/sleep.h>
 
+#ifdef __AVR_ATtiny85__
 #define SWITCH_PIN 0
 #define LED_PIN 1
+#else
+#define SWITCH_PIN 2 // (interrupt 0)
+#define LED_PIN 3
+#endif
 
 void setup() {
   pinMode(SWITCH_PIN, INPUT);
@@ -21,8 +26,12 @@ void setup() {
 }
 
 void gotoSleep() {
+#ifdef __AVR_ATtiny85__
   GIMSK |= 1<<PCIE;  //Enable Pin Change Interrupt
   PCMSK |= 1<<PCINT0; //Watch for Pin Change on Pin5 (PB0)
+#else
+  attachInterrupt(0, interrup, FALLING);
+#endif
   
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
@@ -31,8 +40,12 @@ void gotoSleep() {
   // waking up from sleep mode.
   sleep_disable();
 
+#ifdef __AVR_ATtiny85__
   GIMSK &= ~(1<<PCIE); //Disable the interrupt so it doesn't keep flagging
   PCMSK &= ~(1<<PCINT0);
+#else
+  detachInterrupt(0);
+#endif
 }
 
 void loop() {
@@ -45,6 +58,8 @@ void loop() {
   // Wait for the button to be released
   while (digitalRead(SWITCH_PIN) == LOW) {  }
 }
+
+void interrup() {}
 
 // Interrupt for PIN0 falling edge
 ISR(PCINT0_vect) {
