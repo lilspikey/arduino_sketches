@@ -4,7 +4,8 @@
   http://www.instructables.com/id/Fully-functional-Duplo-traffic-light/step2/Programming-the-microcontroller/
   http://hlt.media.mit.edu/?p=1706
   http://www.arduino.cc/en/Tutorial/PlayMelody
-  
+  http://code.google.com/p/arduino-tiny/
+
 **/
 
 #include <avr/power.h>
