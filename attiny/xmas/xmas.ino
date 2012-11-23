@@ -10,63 +10,41 @@
 #include <avr/power.h>
 #include <avr/sleep.h>
 #include <avr/wdt.h>
+#include <avr/pgmspace.h>
 
+#include "notes.h"
+
+#ifdef __AVR_ATtiny85__
 #define SWITCH_PIN 0
 #define LED_PIN 1
 #define SPEAKER_PIN 2
+#else
+#define SWITCH_PIN 0
+#define LED_PIN 2
+#define SPEAKER_PIN 3
+#endif
 
-#define  C     3830    // 261 Hz 
-#define  D     3400    // 294 Hz 
-#define  E     3038    // 329 Hz 
-#define  F     2864    // 349 Hz 
-#define  G     2550    // 392 Hz 
-#define  A     2272    // 440 Hz 
-#define  B     2028    // 493 Hz 
-#define  C2    1912    // 523 Hz 
-// Define a special note, 'R', to represent a rest
-#define  R     0
+#define BPM 100
+#define NOTES_LEN 4
 
-int melody[] = {  C2,  B,  G,  C2,  B,  E,  C2,  C,  G, A, C2 };
-int beats[]  = { 16, 16, 16,  8,  8,  16, 32, 16, 16, 16, 8, 8 }; 
-int MAX_COUNT = sizeof(melody) / 2; // Melody length, for looping.
+prog_uint16_t notes[2*NOTES_LEN] PROGMEM = {
+  NOTE_A4, 1,
+  NOTE_B4, 1,
+  NOTE_C4, 1,
+  NOTE_A4, 1
+};
 
-// Set overall tempo
-long tempo = 10000;
-// Set length of pause between notes
-int pause = 1000;
-// Loop variable to increase Rest length
-int rest_count = 100; //<-BLETCHEROUS HACK; See NOTES
 
-// Initialize core variables
-int tone_ = 0;
-int beat = 0;
-long duration  = 0;
-
-// PLAY TONE  ==============================================
-// Pulse the speaker to play a tone for a particular duration
-void playTone() {
-  long elapsed_time = 0;
-  if (tone_ > 0) { // if this isn't a Rest beat, while the tone has 
-    //  played less long than 'duration', pulse speaker HIGH and LOW
-    while (elapsed_time < duration) {
-      digitalWrite(LED_PIN, HIGH);
-      digitalWrite(SPEAKER_PIN,HIGH);
-      delayMicroseconds(tone_ / 2);
-
-      // DOWN
-      digitalWrite(SPEAKER_PIN, LOW);
-      digitalWrite(LED_PIN, LOW);
-      delayMicroseconds(tone_ / 2);
-
-      // Keep track of how long we pulsed
-      elapsed_time += (tone_);
-    } 
+void playSong() {
+  int beatDurationMillis = 60*1000/BPM;
+  for ( int i = 0; i < NOTES_LEN; i++ ) {
+    int note = i << 1;
+    long freq = pgm_read_word_near(notes + note);
+    long duration = pgm_read_word_near(notes + note + 1);
+    tone(SPEAKER_PIN, freq);
+    delay(duration*beatDurationMillis);
   }
-  else { // Rest beat; loop times delay
-    for (int j = 0; j < rest_count; j++) { // See NOTE on rest_count
-      delayMicroseconds(duration);  
-    }                                
-  }                                 
+  noTone(SPEAKER_PIN);
 }
 
 void setup() {
@@ -81,8 +59,12 @@ void setup() {
 }
 
 void gotoSleep() {
+#ifdef __AVR_ATtiny85__
   GIMSK |= 1<<PCIE;  //Enable Pin Change Interrupt
   PCMSK |= 1<<PCINT0; //Watch for Pin Change on Pin5 (PB0)
+#else
+  attachInterrupt(0, interrup, FALLING);
+#endif
   
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
@@ -91,33 +73,30 @@ void gotoSleep() {
   // waking up from sleep mode.
   sleep_disable();
 
+#ifdef __AVR_ATtiny85__
   GIMSK &= ~(1<<PCIE); //Disable the interrupt so it doesn't keep flagging
   PCMSK &= ~(1<<PCINT0);
-}
-
-void playSong() {
-  for (int i=0; i<MAX_COUNT; i++) {
-    tone_ = melody[i];
-    beat = beats[i];
-
-    duration = beat * tempo; // Set up timing
-
-    playTone();
-    // A pause between notes...
-    delayMicroseconds(pause);
-  }
+#else
+  detachInterrupt(0);
+#endif
 }
 
 void loop() {
-  playSong();
+  digitalWrite(LED_PIN, HIGH);
+  //playSong();
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
   
-  gotoSleep();
+  //gotoSleep();
       
   // Wait for the button to be released
   while (digitalRead(SWITCH_PIN) == LOW) {  }
 }
 
+void interrup() {}
+
 // Interrupt for PIN0 falling edge
 ISR(PCINT0_vect) {
   
 }
+
