@@ -1,6 +1,11 @@
 #ifndef __NOTES_H__
 #define __NOTES_H__
 
+#define BEAT 2
+#define HALF_BEAT 1
+
+#define NOTE_REST 0
+
 #define NOTE_C0  16
 #define NOTE_Db0 17
 #define NOTE_D0  18

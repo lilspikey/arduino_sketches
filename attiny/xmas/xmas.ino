@@ -29,18 +29,70 @@
 #endif
 
 #define BPM 100l
-#define NOTES_LEN 4
+#define NOTES_LEN 46
+
+// transcribed via http://www.songsterr.com/a/wsa/theme-songs-futurama-theme-intro-arranged-for-guitar-tab-s23258t0
 
 prog_uint16_t notes[2*NOTES_LEN] PROGMEM = {
-  NOTE_F4, 1,
-  NOTE_G4, 1,
-  NOTE_A4, 1,
-  NOTE_F4, 1
+  /* bar 1 */
+  NOTE_E3, BEAT,
+  NOTE_E3, BEAT,
+  NOTE_REST, HALF_BEAT,
+  NOTE_A3, HALF_BEAT,
+  NOTE_A3, HALF_BEAT,
+  NOTE_REST, HALF_BEAT,
+  /* bar 2 */
+  NOTE_D3, BEAT,
+  NOTE_D3, BEAT,
+  NOTE_REST, HALF_BEAT,
+  NOTE_E3, HALF_BEAT,
+  NOTE_E3, HALF_BEAT,
+  NOTE_REST, HALF_BEAT,
+  /* bar 3 */
+  NOTE_E3, BEAT,
+  NOTE_E3, BEAT,
+  NOTE_REST, HALF_BEAT,
+  NOTE_A3, HALF_BEAT,
+  NOTE_A3, HALF_BEAT,
+  NOTE_REST, HALF_BEAT,
+  /* bar 4 */
+  NOTE_D3, BEAT,
+  NOTE_D3, BEAT,
+  NOTE_REST, HALF_BEAT,
+  NOTE_G3, HALF_BEAT,
+  NOTE_G3, HALF_BEAT,
+  NOTE_Gb3, HALF_BEAT,
+  /* bar 5 */
+  NOTE_E3, BEAT,
+  NOTE_REST, HALF_BEAT,
+  NOTE_E3, HALF_BEAT,
+  NOTE_A3, BEAT,
+  NOTE_Ab3, BEAT,
+  /* bar 6 */
+  NOTE_D3, BEAT,
+  NOTE_REST, HALF_BEAT,
+  NOTE_D3, HALF_BEAT,
+  NOTE_Gb3, BEAT,
+  NOTE_E3, BEAT,
+  /* bar 7 */
+  NOTE_E3, BEAT,
+  NOTE_REST, HALF_BEAT,
+  NOTE_E3, HALF_BEAT,
+  NOTE_A3, BEAT,
+  NOTE_Ab3, BEAT,
+  /* bar 8 */
+  NOTE_B3, BEAT,
+  NOTE_REST, HALF_BEAT,
+  NOTE_B3, HALF_BEAT,
+  NOTE_G3, HALF_BEAT,
+  NOTE_G3, HALF_BEAT,
+  NOTE_Gb3, HALF_BEAT,
+  NOTE_Gb3, HALF_BEAT
 };
 
 
 void playSong() {
-  long beatDurationMillis = (60l*1000l)/BPM;
+  long beatDurationMillis = (60l*1000l)/(BPM*BEAT);
   for ( int i = 0; i < NOTES_LEN; i++ ) {
     int note = i << 1;
     long freq = pgm_read_word_near(notes + note);
@@ -51,11 +103,18 @@ void playSong() {
     Serial.print(", duration: ");
     Serial.println(duration);
 #endif
-    tone(SPEAKER_PIN, freq);
-    digitalWrite(LED_PIN, HIGH);
-    delay(3*duration*beatDurationMillis/4);
-    digitalWrite(LED_PIN, LOW);
-    delay(duration*beatDurationMillis/4);
+    if ( freq == NOTE_REST ) {
+      noTone(SPEAKER_PIN);
+      delay(duration*beatDurationMillis);
+    }
+    else {
+      tone(SPEAKER_PIN, freq);
+      digitalWrite(LED_PIN, HIGH);
+      delay(4*duration*beatDurationMillis/5);
+      noTone(SPEAKER_PIN);
+      digitalWrite(LED_PIN, LOW);
+      delay(duration*beatDurationMillis/5);
+    }
   }
   noTone(SPEAKER_PIN);
 }
