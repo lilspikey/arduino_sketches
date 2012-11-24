@@ -15,35 +15,47 @@
 
 #include "notes.h"
 
+//#define DEBUG
+
+
 #ifdef __AVR_ATtiny85__
 #define SWITCH_PIN 0
 #define LED_PIN 1
 #define SPEAKER_PIN 2
 #else
-#define SWITCH_PIN 0
-#define LED_PIN 2
-#define SPEAKER_PIN 3
+#define SWITCH_PIN 2 // (interrupt 0)
+#define LED_PIN 3
+#define SPEAKER_PIN 4
 #endif
 
-#define BPM 100
+#define BPM 100l
 #define NOTES_LEN 4
 
 prog_uint16_t notes[2*NOTES_LEN] PROGMEM = {
+  NOTE_F4, 1,
+  NOTE_G4, 1,
   NOTE_A4, 1,
-  NOTE_B4, 1,
-  NOTE_C4, 1,
-  NOTE_A4, 1
+  NOTE_F4, 1
 };
 
 
 void playSong() {
-  int beatDurationMillis = 60*1000/BPM;
+  long beatDurationMillis = (60l*1000l)/BPM;
   for ( int i = 0; i < NOTES_LEN; i++ ) {
     int note = i << 1;
     long freq = pgm_read_word_near(notes + note);
     long duration = pgm_read_word_near(notes + note + 1);
+#ifdef DEBUG
+    Serial.print("freq: ");
+    Serial.println(freq);
+    Serial.print(", duration: ");
+    Serial.println(duration);
+#endif
     tone(SPEAKER_PIN, freq);
-    delay(duration*beatDurationMillis);
+    digitalWrite(LED_PIN, HIGH);
+    delay(3*duration*beatDurationMillis/4);
+    digitalWrite(LED_PIN, LOW);
+    delay(duration*beatDurationMillis/4);
   }
   noTone(SPEAKER_PIN);
 }
@@ -57,6 +69,10 @@ void setup() {
 
   ADCSRA &= ~(1<<ADEN); //turn off ADC
   ACSR |= _BV(ACD);     //disable the analog comparator
+  
+#ifndef DEBUG
+  Serial.begin(9600);
+#endif
 }
 
 void gotoSleep() {
@@ -83,12 +99,11 @@ void gotoSleep() {
 }
 
 void loop() {
-  digitalWrite(LED_PIN, HIGH);
-  //playSong();
-  delay(500);
+  playSong();
+  delay(200);
   digitalWrite(LED_PIN, LOW);
   
-  //gotoSleep();
+  gotoSleep();
       
   // Wait for the button to be released
   while (digitalRead(SWITCH_PIN) == LOW) {  }
