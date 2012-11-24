@@ -158,14 +158,14 @@ void gotoSleep() {
 }
 
 void loop() {
-  playSong();
-  delay(200);
-  digitalWrite(LED_PIN, LOW);
-  
   gotoSleep();
       
   // Wait for the button to be released
   while (digitalRead(SWITCH_PIN) == LOW) {  }
+  
+  playSong();
+  delay(200);
+  digitalWrite(LED_PIN, LOW);
 }
 
 void interrup() {}
