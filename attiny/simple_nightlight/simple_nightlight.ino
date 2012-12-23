@@ -1,3 +1,5 @@
+#include <EEPROM.h>
+
 #ifdef __AVR_ATtiny85__
 #define SWITCH_PIN 0
 #define RED_PIN 1
@@ -25,10 +27,17 @@
 #define CYAN 5
 #define GREEN 6
 
+#define COLOR_SETTING 0
+
 int state = STATE_SHOW_COLOR;
 int debounce = 0;
 int color = 0;
 int next_color = 0;
+int write_settings = 0;
+
+int clampColor(int color) {
+  return color >= COLORS? 0 : color;
+}
 
 void setup() {
   pinMode(SWITCH_PIN, INPUT);
@@ -37,6 +46,8 @@ void setup() {
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
+  
+  color = clampColor(EEPROM.read(COLOR_SETTING));
 }
 
 void showColor(int color) {
@@ -100,6 +111,14 @@ void loop() {
         state = STATE_BUTTON_DOWN;
         debounce = 0;
       }
+      else if ( write_settings > 0 ) {
+        write_settings--;
+        if ( write_settings == 0 ) {
+          if ( clampColor(EEPROM.read(COLOR_SETTING)) != color ) {
+            EEPROM.write(COLOR_SETTING, color);
+          }
+        }
+      }
     }
     break;
     case STATE_BUTTON_DOWN: {
@@ -116,19 +135,17 @@ void loop() {
     }
     break;
     case STATE_BUTTON_RELEASED: {
-      next_color = color + 1;
-      if ( next_color >= COLORS ) {
-        next_color = 0;
-      }
+      next_color = clampColor(color + 1);
       state = STATE_TRANSITION;
     }
     break;
     case STATE_TRANSITION: {
       state = STATE_SHOW_COLOR;
-      for ( int i = 0; i < 100; i++ ) {
-        blendColors(i+1, color, next_color);
+      for ( int i = 0; i < 33; i++ ) {
+        blendColors(3*(i+1), color, next_color);
       }
       color = next_color;
+      write_settings = 100;
     }
     break;
     case STATE_SHOW_COLOR: {
@@ -137,6 +154,6 @@ void loop() {
     }
     break;
   }
-  delay(50);
+  delay(40);
 }
 
