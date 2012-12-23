@@ -39,6 +39,60 @@ void setup() {
   pinMode(BLUE_PIN, OUTPUT);
 }
 
+void showColor(int color) {
+  switch(color) {
+    case WHITE: {
+      digitalWrite(RED_PIN, LOW);
+      digitalWrite(GREEN_PIN, LOW);
+      digitalWrite(BLUE_PIN, LOW);
+    }
+    break;
+    case YELLOW: {
+      digitalWrite(RED_PIN, LOW);
+      digitalWrite(GREEN_PIN, LOW);
+      digitalWrite(BLUE_PIN, HIGH);
+    }
+    break;
+    case RED: {
+      digitalWrite(RED_PIN, LOW);
+      digitalWrite(GREEN_PIN, HIGH);
+      digitalWrite(BLUE_PIN, HIGH);   
+    }
+    break;
+    case PURPLE: {
+      digitalWrite(RED_PIN, LOW);
+      digitalWrite(GREEN_PIN, HIGH);
+      digitalWrite(BLUE_PIN, LOW);          
+    }
+    break;
+    case BLUE: {
+      digitalWrite(RED_PIN, HIGH);
+      digitalWrite(GREEN_PIN, HIGH);
+      digitalWrite(BLUE_PIN, LOW);
+    }
+    break;
+    case CYAN: {
+      digitalWrite(RED_PIN, HIGH);
+      digitalWrite(GREEN_PIN, LOW);
+      digitalWrite(BLUE_PIN, LOW);   
+    }
+    break;
+    case GREEN: {
+      digitalWrite(RED_PIN, HIGH);
+      digitalWrite(GREEN_PIN, LOW);
+      digitalWrite(BLUE_PIN, HIGH);   
+    }
+    break;
+  }
+}
+
+void blendColors(int percentage, int color1, int color2) { 
+  for ( int i = 0; i < 100; i++ ) {
+    showColor(i > percentage? color1 : color2);
+    delayMicroseconds(1);
+  }
+}
+
 void loop() {
   switch(state) {
     case STATE_IDLE: {
@@ -71,55 +125,14 @@ void loop() {
     break;
     case STATE_TRANSITION: {
       state = STATE_SHOW_COLOR;
+      for ( int i = 0; i < 100; i++ ) {
+        blendColors(i+1, color, next_color);
+      }
       color = next_color;
     }
     break;
     case STATE_SHOW_COLOR: {
-      switch(color) {
-        case WHITE: {
-          digitalWrite(RED_PIN, LOW);
-          digitalWrite(GREEN_PIN, LOW);
-          digitalWrite(BLUE_PIN, LOW);
-        }
-        break;
-        case YELLOW: {
-          digitalWrite(RED_PIN, LOW);
-          digitalWrite(GREEN_PIN, LOW);
-          digitalWrite(BLUE_PIN, HIGH);
-        }
-        break;
-        case RED: {
-          digitalWrite(RED_PIN, LOW);
-          digitalWrite(GREEN_PIN, HIGH);
-          digitalWrite(BLUE_PIN, HIGH);   
-        }
-        break;
-        case PURPLE: {
-          digitalWrite(RED_PIN, LOW);
-          digitalWrite(GREEN_PIN, HIGH);
-          digitalWrite(BLUE_PIN, LOW);          
-        }
-        break;
-        case BLUE: {
-          digitalWrite(RED_PIN, HIGH);
-          digitalWrite(GREEN_PIN, HIGH);
-          digitalWrite(BLUE_PIN, LOW);
-        }
-        break;
-        case CYAN: {
-          digitalWrite(RED_PIN, HIGH);
-          digitalWrite(GREEN_PIN, LOW);
-          digitalWrite(BLUE_PIN, LOW);   
-        }
-        break;
-        case GREEN: {
-          digitalWrite(RED_PIN, HIGH);
-          digitalWrite(GREEN_PIN, LOW);
-          digitalWrite(BLUE_PIN, HIGH);   
-        }
-        break;
-      }
-      
+      showColor(color);      
       state = STATE_IDLE;
     }
     break;
