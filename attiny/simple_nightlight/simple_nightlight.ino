@@ -29,6 +29,8 @@
 
 #define COLOR_SETTING 0
 
+#define LOOP_DELAY_MILLIS 40
+
 int state = STATE_SHOW_COLOR;
 int debounce = 0;
 int color = 0;
@@ -145,7 +147,8 @@ void loop() {
         blendColors(3*(i+1), color, next_color);
       }
       color = next_color;
-      write_settings = 100;
+      // wait a bit before we write settings away
+      write_settings = 800/LOOP_DELAY_MILLIS;
     }
     break;
     case STATE_SHOW_COLOR: {
@@ -154,6 +157,6 @@ void loop() {
     }
     break;
   }
-  delay(40);
+  delay(LOOP_DELAY_MILLIS);
 }
 
