@@ -19,6 +19,11 @@ class Charlieplex {
     CHARLIE_DDR = CHARLIE_DDR & ~_mask;
     CHARLIE_PORT = CHARLIE_PORT & ~_mask;
   }
+  
+  void _define_pin(int pin, int maskHigh, int maskLow) {
+    _ddr[pin] = maskLow | maskHigh;
+    _port[pin] = maskHigh;
+  }
 
   public:
     Charlieplex(int masks[SIZE])
@@ -28,16 +33,20 @@ class Charlieplex {
         _mask |= m;
       }
       
+      /*
+      Define order of LEDs. They proceed in pairs using the same pair of pins. With the first
+      LED in the pair being that one that would be lit be bring the first pin high and the second
+      pin low
+       */
       int pin = 0;
       for ( int i = 0 ; i < SIZE; i++ ) {
-        for ( int j = 0; j < SIZE; j++ ) {
-          if ( i != j ) {
-            int maskLow = masks[i];
-            int maskHigh = masks[j];
-            _ddr[pin] = maskLow | maskHigh;
-            _port[pin] = maskHigh;
-            pin++;
-          }
+        for ( int j = i+1; j < SIZE; j++ ) {
+          int maski = masks[i];
+          int maskj = masks[j];
+          _define_pin(pin, maski, maskj);
+          pin++;
+          _define_pin(pin, maskj, maski);
+          pin++;
         }
       }
     }
