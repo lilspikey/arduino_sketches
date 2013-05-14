@@ -66,10 +66,15 @@ class Charlieplex {
     }
     
     void display() {
-      for ( int pin = 0; pin < size(); pin++ ) {
+      int num = size();
+      for ( int pin = 0; pin < num; pin++ ) {
         if ( _pins[pin] ) {
           CHARLIE_DDR = (CHARLIE_DDR & ~_mask) | _ddr[pin];
           CHARLIE_PORT = (CHARLIE_PORT & ~_mask) | _port[pin];
+        }
+        else {
+          CHARLIE_DDR = CHARLIE_DDR & ~_mask;
+          CHARLIE_PORT = CHARLIE_PORT & ~_mask;
         }
         delayMicroseconds(1);
       }
