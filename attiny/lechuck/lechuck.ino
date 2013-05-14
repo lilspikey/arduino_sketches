@@ -3,8 +3,9 @@
 #define PIN8_MASK  (1)
 #define PIN9_MASK  (1 << 1)
 #define PIN10_MASK (1 << 2)
+#define PIN11_MASK (1 << 3)
 
-Charlieplex<3> charlie((int[]){ PIN8_MASK, PIN9_MASK, PIN10_MASK });
+Charlieplex<4> charlie((int[]){ PIN8_MASK, PIN9_MASK, PIN10_MASK, PIN11_MASK });
 
 int current;
 int val;
