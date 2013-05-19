@@ -13,12 +13,6 @@ class Charlieplex {
   unsigned char _port[SIZE * (SIZE-1)];
   unsigned char _ddr[SIZE * (SIZE-1)];
   unsigned char _pins[SIZE * (SIZE-1)];
-
-  /** turn off all LEDs **/
-  void _off() {
-    CHARLIE_DDR = CHARLIE_DDR & ~_mask;
-    CHARLIE_PORT = CHARLIE_PORT & ~_mask;
-  }
   
   void _define_pin(int pin, int maskHigh, int maskLow) {
     _ddr[pin] = maskLow | maskHigh;
@@ -69,16 +63,18 @@ class Charlieplex {
       int num = size();
       for ( int pin = 0; pin < num; pin++ ) {
         if ( _pins[pin] ) {
-          CHARLIE_DDR = (CHARLIE_DDR & ~_mask) | _ddr[pin];
-          CHARLIE_PORT = (CHARLIE_PORT & ~_mask) | _port[pin];
-        }
-        else {
-          CHARLIE_DDR = CHARLIE_DDR & ~_mask;
-          CHARLIE_PORT = CHARLIE_PORT & ~_mask;
+          // first turn off everything before changing
+          // pin direction - on ATtiny when not not doing this
+          // was getting extra LEDs lit, when two different LEDs
+          // were lit
+          CHARLIE_PORT = (CHARLIE_PORT & ~_mask);
+          CHARLIE_DDR  = (CHARLIE_DDR  & ~_mask) | _ddr[pin];
+          CHARLIE_PORT = CHARLIE_PORT | _port[pin];
         }
         delayMicroseconds(1);
       }
-      CHARLIE_DDR = CHARLIE_DDR & ~_mask;
+      /** turn off all LEDs **/
+      CHARLIE_DDR  = CHARLIE_DDR  & ~_mask;
       CHARLIE_PORT = CHARLIE_PORT & ~_mask;
     }
     
