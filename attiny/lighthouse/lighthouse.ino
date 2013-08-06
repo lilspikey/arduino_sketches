@@ -1,7 +1,5 @@
 /**
- * Simple sketch to test how little power we can use when
- * ATTiny goes to sleep.
- * Most of the extra saving seems to be due to turning off ADC
+ * When button pressed LED will pulse twice, then goes back to sleep
  **/
 
 #include <avr/power.h>
