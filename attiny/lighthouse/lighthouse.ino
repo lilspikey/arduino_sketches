@@ -13,10 +13,22 @@
 #define LED_PIN 9
 #endif
 
-#define PULSE_DURATION 1000
-#define SIN_LEN 27
+#define SIN_LEN 201
 
-prog_uchar sin_table[SIN_LEN] PROGMEM = { 0, 30, 61, 90, 118, 144, 169, 190, 209, 225, 238, 247, 253, 255, 253, 247, 238, 225, 209, 190, 169, 144, 118, 90, 61, 30, 0 };
+prog_uchar sin_table[SIN_LEN] PROGMEM = {
+  0, 4, 8, 12, 16, 20, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 74, 78,
+  82, 86, 90, 93, 97, 101, 104, 108, 112, 115, 119, 122, 126, 129, 133, 136, 140,
+  143, 146, 149, 153, 156, 159, 162, 165, 168, 171, 174, 177, 180, 183, 185, 188,
+  191, 193, 196, 199, 201, 203, 206, 208, 210, 213, 215, 217, 219, 221, 223, 225,
+  227, 228, 230, 232, 234, 235, 237, 238, 239, 241, 242, 243, 244, 245, 246, 247,
+  248, 249, 250, 251, 251, 252, 252, 253, 253, 254, 254, 254, 254, 254, 255, 254,
+  254, 254, 254, 254, 253, 253, 252, 252, 251, 251, 250, 249, 248, 247, 246, 245,
+  244, 243, 242, 241, 239, 238, 237, 235, 234, 232, 230, 228, 227, 225, 223, 221,
+  219, 217, 215, 213, 210, 208, 206, 203, 201, 199, 196, 193, 191, 188, 185, 183,
+  180, 177, 174, 171, 168, 165, 162, 159, 156, 153, 149, 146, 143, 140, 136, 133,
+  129, 126, 122, 119, 115, 112, 108, 104, 101, 97, 93, 90, 86, 82, 78, 74, 71, 67,
+  63, 59, 55, 51, 47, 43, 39, 35, 31, 27, 23, 20, 16, 12, 8, 4, 0
+};
 
 void setup() {
   pinMode(SWITCH_PIN, INPUT);
@@ -51,14 +63,14 @@ void gotoSleep() {
 #endif
 }
 
-void pulse() {
+void pulse(long duration) {
   long start = millis();
   long current = -1;
-  while ( (current = millis()) - start < PULSE_DURATION ) {
-    int sin_index = (int)(SIN_LEN*(current - start)/PULSE_DURATION);
+  while ( (current = millis()) - start < duration ) {
+    int sin_index = (int)((SIN_LEN*(current - start))/duration);
     int pwm = 0xFF & pgm_read_byte_near(sin_table + sin_index);
     analogWrite(LED_PIN, pwm);
-    delay(10);
+    delay(5);
   }
   
   // ensure fully turned off
@@ -71,10 +83,11 @@ void loop() {
   // Wait for the button to be released
   while (digitalRead(SWITCH_PIN) == LOW) {  }
   
-  for ( int i = 0; i < 2; i++ ) {
-    pulse();
-    delay(250);
-  }
+  pulse(3000);
+  delay(1000);
+  pulse(7000);
+  delay(1000);
+  pulse(3000);
 }
 
 void interrup() {}
